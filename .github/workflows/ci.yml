@@ -1,0 +1,62 @@
+name: CI
+
+on:
+  push:
+    branches: ['**']
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: kinesiology_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    env:
+      NODE_ENV: test
+      DB_HOST: localhost
+      DB_PORT: 5432
+      DB_USER: postgres
+      DB_PASS: postgres
+      DB_DATABASE: kinesiology_test
+      DB_SSL: false
+      DB_LOGGING: false
+      JWT_SECRET: ci-secret-0123456789abcdef0123456789
+      MAIL_ENCRYPTION_KEY: ci-mail-key-0123456789abcdef01234567
+      LOGIN_ATTEMPT_SECRET: ci-login-key-0123456789abcdef0123456
+      AUDIT_HASH_SECRET: ci-audit-key-0123456789abcdef0123456
+      APP_URL: http://localhost:3000
+      FRONTEND_URL: http://localhost:4200
+      PORT: 3001
+      MAIL_ENABLED: false
+      SWAGGER_ENABLED: false
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+      - run: npm audit --audit-level=high
+      - run: npm run lint
+      - run: npm run typecheck
+      - run: npm run test:cov -- --runInBand
+      - run: npm run migration:run
+      - run: npm run migration:check
+      - run: npm run build
+      - run: npm run test:e2e -- --runInBand

@@ -1,0 +1,12 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "module": "esnext",
+    "moduleResolution": "bundler",
+    "resolvePackageJsonExports": true,
+    "allowImportingTsExtensions": false,
+    "allowJs": true,
+    "ignoreDeprecations": "5.0"
+  },
+  "include": ["src/**/*.ts", "test/**/*.ts"]
+}
